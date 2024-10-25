@@ -8,8 +8,8 @@ $(document).ready(function() {
         return text.replace(/\[[^\]]*\]/g, ''); // Remove [???] and its content
     };
 
-    // On convert button click, copy text from #input to #output
-    $('#convert').on('click', function() {
+    // Function to convert and copy the text
+    const convertAndCopy = () => {
         const inputText = $('#input').val();
         const cleanedText = removeBrackets(inputText); // Remove brackets first
         // Split the cleaned text into lines and process each line
@@ -17,7 +17,14 @@ $(document).ready(function() {
         const formattedLines = lines.map(line => addLineBreaks(line, maxLength)); // Adjust length as needed
         const formattedText = formattedLines.join('\n'); // Join lines back with line breaks
         $('#output').val(formattedText);
-    });
+
+        // Copy the formatted text to clipboard
+        navigator.clipboard.writeText(formattedText).then(function() {
+            console.log('Converted text copied to clipboard successfully!');
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+        });
+    };
 
     // Function to add line breaks for a single line
     const addLineBreaks = (text, maxLength) => {
@@ -45,20 +52,16 @@ $(document).ready(function() {
         localStorage.setItem('maxLength', maxLength); // Save to local storage
     });
 
-    // On copy button click, copy #output textarea into clipboard
-    $('#copy').on('click', function() {
-        const outputText = $('#output').val();
-        navigator.clipboard.writeText(outputText).then(function() {
-            console.log('Copied to clipboard successfully!');
-        }).catch(function(err) {
-            console.error('Failed to copy: ', err);
-        });
+    // On #input textarea change, convert and copy to clipboard
+    $('#input').on('input', function() {
+        convertAndCopy();
     });
 
     // On paste button click, paste text from clipboard into #input
     $('#paste').on('click', function() {
         navigator.clipboard.readText().then(function(text) {
             $('#input').val(text); // Paste text into #input
+            convertAndCopy(); // Convert and copy after pasting
         }).catch(function(err) {
             console.error('Failed to read clipboard contents: ', err);
         });
