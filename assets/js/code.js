@@ -26,19 +26,43 @@ $(document).ready(function() {
         });
     };
 
-    // Function to add line breaks for a single line
+    // Enhanced function to add line breaks for a single line with additional conditions
     const addLineBreaks = (text, maxLength) => {
-        const words = text.split(' '); // Split text into words
+        // If text is shorter than maxLength or is a single word, return it as is
+        if (text.length <= maxLength || text.split(' ').length === 1) return text;
+
+        // Check for commas and split based on them if possible
+        if (text.includes(',')) {
+            let result = '';
+            const segments = text.split(',');
+            segments.forEach((segment, index) => {
+                // Only add line breaks if segment length exceeds maxLength
+                if (segment.trim().length > maxLength) {
+                    result += splitAtWord(segment.trim(), maxLength);
+                } else {
+                    result += segment.trim();
+                }
+                if (index < segments.length - 1) result += ',\n'; // Add comma and newline
+            });
+            return result;
+        }
+
+        // If no comma, try splitting near the middle while avoiding word splits
+        return splitAtWord(text, maxLength);
+    };
+
+    // Helper function to split a line near maxLength while avoiding word splits
+    const splitAtWord = (text, maxLength) => {
+        let words = text.split(' ');
         let currentLine = '';
         let result = '';
 
         words.forEach((word) => {
             if ((currentLine + word).length > maxLength) {
-                // If adding the next word exceeds maxLength, add currentLine to result and start a new line
-                result += currentLine.trim() + '\n'; // Trim to avoid extra space
+                result += currentLine.trim() + '\n'; // Start a new line
                 currentLine = word + ' '; // Start new line with the current word
             } else {
-                currentLine += word + ' '; // Add the word to the current line
+                currentLine += word + ' ';
             }
         });
 
