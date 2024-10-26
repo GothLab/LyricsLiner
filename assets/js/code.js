@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    console.log('3');
+    console.log('4')
     // Load character limit from local storage or set default to 25
     let maxLength = localStorage.getItem('maxLength') ? parseInt(localStorage.getItem('maxLength')) : 25;
     $('#range').val(maxLength); // Set initial value of the range input
@@ -27,33 +27,39 @@ $(document).ready(function() {
         });
     };
 
-    // Function to add line breaks for a single line, splitting close to middle
+    // Function to add line breaks for a single line, avoiding comma start and splitting near middle
     const addLineBreaks = (text, maxLength) => {
         let result = '';
         while (text.length > maxLength) {
             let breakPoint = Math.floor(maxLength / 2);
 
-            // Find a space or comma near the middle point to break the line
-            while (breakPoint < text.length && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
+            // Look for comma or space around the midpoint
+            while (breakPoint < text.length && text[breakPoint] !== ',' && text[breakPoint] !== ' ') {
                 breakPoint++;
             }
 
-            // If no space/comma found near the middle, go backward
-            if (breakPoint >= text.length || breakPoint - maxLength / 2 > 10) {
+            // If no space or comma found moving forward, go backward from the midpoint
+            if (breakPoint >= text.length || text[breakPoint] === ',' || breakPoint - maxLength / 2 > 10) {
                 breakPoint = Math.floor(maxLength / 2);
-                while (breakPoint > 0 && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
+                while (breakPoint > 0 && text[breakPoint] !== ',' && text[breakPoint] !== ' ') {
                     breakPoint--;
                 }
             }
 
-            // Ensure a suitable split even if no spaces or commas are found
+            // Ensure a fallback if no suitable space/comma is found
             if (breakPoint === 0) breakPoint = maxLength;
 
-            // Add the line to the result, checking for short tails
+            // Add the current line to the result, checking for short tails
             let currentLine = text.slice(0, breakPoint).trim();
             text = text.slice(breakPoint).trim();
 
-            // Adjust if last segment of the line is shorter than 10 characters
+            // Prevent new lines starting with a comma
+            if (text.startsWith(',')) {
+                currentLine += ',';
+                text = text.slice(1).trim();
+            }
+
+            // Adjust for short tail conditions
             if (text.length < 10) {
                 currentLine += ' ' + text;
                 text = '';
