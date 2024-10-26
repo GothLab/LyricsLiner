@@ -26,47 +26,39 @@ $(document).ready(function() {
         });
     };
 
-    // Enhanced function to add line breaks for a single line with additional conditions
+    // Enhanced function to add line breaks with additional handling for short lines
     const addLineBreaks = (text, maxLength) => {
-        // If text is shorter than maxLength or is a single word, return it as is
-        if (text.length <= maxLength || text.split(' ').length === 1) return text;
-
-        // Check for commas and split based on them if possible
-        if (text.includes(',')) {
-            let result = '';
-            const segments = text.split(',');
-            segments.forEach((segment, index) => {
-                // Only add line breaks if segment length exceeds maxLength
-                if (segment.trim().length > maxLength) {
-                    result += splitAtWord(segment.trim(), maxLength);
-                } else {
-                    result += segment.trim();
-                }
-                if (index < segments.length - 1) result += ',\n'; // Add comma and newline
-            });
-            return result;
-        }
-
-        // If no comma, try splitting near the middle while avoiding word splits
-        return splitAtWord(text, maxLength);
-    };
-
-    // Helper function to split a line near maxLength while avoiding word splits
-    const splitAtWord = (text, maxLength) => {
-        let words = text.split(' ');
+        const words = text.split(' ');
         let currentLine = '';
         let result = '';
 
         words.forEach((word) => {
             if ((currentLine + word).length > maxLength) {
-                result += currentLine.trim() + '\n'; // Start a new line
-                currentLine = word + ' '; // Start new line with the current word
+                // Avoid breaking if the resulting line would have less than 10 characters
+                if (currentLine.trim().length < 10) {
+                    currentLine += word + ' ';
+                } else {
+                    result += currentLine.trim() + '\n';
+                    currentLine = word + ' ';
+                }
             } else {
                 currentLine += word + ' ';
             }
         });
 
-        result += currentLine.trim(); // Add any remaining text to result
+        // If the last line is too short, check for comma to split or merge it with the previous line
+        if (currentLine.trim().length < 10 && result.includes(',')) {
+            // Try to split the last line based on commas if possible
+            const lastCommaIndex = result.lastIndexOf(',');
+            if (lastCommaIndex !== -1) {
+                result = result.slice(0, lastCommaIndex + 1) + '\n' + currentLine.trim();
+            } else {
+                result += currentLine.trim();
+            }
+        } else {
+            result += currentLine.trim(); // Add any remaining text to result
+        }
+
         return result;
     };
 
