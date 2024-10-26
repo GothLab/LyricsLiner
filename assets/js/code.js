@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    console.log(2);
+    console.log('3');
     // Load character limit from local storage or set default to 25
     let maxLength = localStorage.getItem('maxLength') ? parseInt(localStorage.getItem('maxLength')) : 25;
     $('#range').val(maxLength); // Set initial value of the range input
@@ -27,50 +27,43 @@ $(document).ready(function() {
         });
     };
 
-    // Function to add line breaks for a single line with handling for short tails
+    // Function to add line breaks for a single line, splitting close to middle
     const addLineBreaks = (text, maxLength) => {
         let result = '';
-        let currentLine = '';
+        while (text.length > maxLength) {
+            let breakPoint = Math.floor(maxLength / 2);
 
-        while (text.length > 0) {
-            if (text.length <= maxLength) {
-                result += text.trim();
-                break;
+            // Find a space or comma near the middle point to break the line
+            while (breakPoint < text.length && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
+                breakPoint++;
             }
 
-            // Find the best split point based on maxLength
-            let breakPoint = maxLength;
-            while (breakPoint > 0 && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
-                breakPoint--;
-            }
-
-            // If no space/comma is found within maxLength, split in middle, keeping words intact
-            if (breakPoint === 0) {
-                breakPoint = maxLength;
-                while (breakPoint < text.length && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
-                    breakPoint++;
+            // If no space/comma found near the middle, go backward
+            if (breakPoint >= text.length || breakPoint - maxLength / 2 > 10) {
+                breakPoint = Math.floor(maxLength / 2);
+                while (breakPoint > 0 && text[breakPoint] !== ' ' && text[breakPoint] !== ',') {
+                    breakPoint--;
                 }
             }
 
-            // Get the current line up to the split point
-            currentLine = text.slice(0, breakPoint).trim();
-            text = text.slice(breakPoint).trim(); // Update remaining text
+            // Ensure a suitable split even if no spaces or commas are found
+            if (breakPoint === 0) breakPoint = maxLength;
 
-            // Check if the tail of the current line is shorter than 10 characters
-            if (currentLine.length < maxLength && currentLine.length - currentLine.lastIndexOf(' ') < 10) {
-                // If possible, break at the last comma before maxLength
-                const commaIndex = currentLine.lastIndexOf(',');
-                if (commaIndex > maxLength / 2) {
-                    currentLine = currentLine.slice(0, commaIndex + 1).trim();
-                    text = currentLine.slice(commaIndex + 1).trim() + ' ' + text;
-                }
+            // Add the line to the result, checking for short tails
+            let currentLine = text.slice(0, breakPoint).trim();
+            text = text.slice(breakPoint).trim();
+
+            // Adjust if last segment of the line is shorter than 10 characters
+            if (text.length < 10) {
+                currentLine += ' ' + text;
+                text = '';
             }
 
-            // Add the line to result and continue
             result += currentLine + '\n';
         }
 
-        return result.trim();
+        result += text.trim(); // Add any remaining text
+        return result;
     };
 
     // On #range input change, update maxLength and save to local storage
