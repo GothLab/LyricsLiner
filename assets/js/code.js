@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    console.log('1');
     // Load character limit from local storage or set default to 25
     let maxLength = localStorage.getItem('maxLength') ? parseInt(localStorage.getItem('maxLength')) : 25;
     $('#range').val(maxLength); // Set initial value of the range input
